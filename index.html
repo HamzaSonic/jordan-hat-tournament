@@ -312,6 +312,10 @@
     const RUNAWAY_AFTER_CLICKS = 5;
     let skipNextNoClick = false;
 
+    function isMobileTouch() {
+      return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    }
+
     yesBtn.addEventListener("click", handleYesClick);
     noBtn.addEventListener("click", onNoClick);
 
@@ -377,18 +381,24 @@
         skipNextNoClick = false;
         return;
       }
+      // Mobile final step: dodge only — no more progression
+      if (runawayEnabled && isMobileTouch()) {
+        runAway();
+        return;
+      }
       handleNoClick();
     }
 
     function enableRunaway() {
-      noBtn.addEventListener("mouseover", runAway);
+      if (!isMobileTouch()) {
+        noBtn.addEventListener("mouseover", runAway);
+      }
       noBtn.addEventListener("touchstart", onNoTouchStart, { passive: false });
     }
 
     function onNoTouchStart(e) {
       if (!runawayEnabled) return;
       skipNextNoClick = true;
-      handleNoClick();
       runAway();
       e.preventDefault();
     }
