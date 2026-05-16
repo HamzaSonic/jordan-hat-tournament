@@ -107,6 +107,12 @@
       flex-wrap: wrap;
     }
 
+    #yes-btn,
+    #no-btn {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     #yes-btn {
       background: linear-gradient(135deg, #2d8a6e, #1e6b54);
       color: white;
@@ -304,9 +310,10 @@
     const musicToggle = document.getElementById("music-toggle");
 
     const RUNAWAY_AFTER_CLICKS = 5;
+    let skipNextNoClick = false;
 
     yesBtn.addEventListener("click", handleYesClick);
-    noBtn.addEventListener("click", handleNoClick);
+    noBtn.addEventListener("click", onNoClick);
 
     musicToggle.addEventListener("click", () => {
       soundOn = !soundOn;
@@ -365,19 +372,37 @@
       }, 200);
     }
 
+    function onNoClick() {
+      if (skipNextNoClick) {
+        skipNextNoClick = false;
+        return;
+      }
+      handleNoClick();
+    }
+
     function enableRunaway() {
       noBtn.addEventListener("mouseover", runAway);
-      noBtn.addEventListener("touchstart", runAway, { passive: true });
+      noBtn.addEventListener("touchstart", onNoTouchStart, { passive: false });
+    }
+
+    function onNoTouchStart(e) {
+      if (!runawayEnabled) return;
+      skipNextNoClick = true;
+      handleNoClick();
+      runAway();
+      e.preventDefault();
     }
 
     function runAway() {
-      const margin = 20;
+      const margin = 16;
       const btnW = noBtn.offsetWidth;
       const btnH = noBtn.offsetHeight;
-      const maxX = window.innerWidth - btnW - margin;
-      const maxY = window.innerHeight - btnH - margin;
-      const randomX = Math.random() * maxX + margin / 2;
-      const randomY = Math.random() * maxY + margin / 2;
+      const vw = window.visualViewport?.width ?? window.innerWidth;
+      const vh = window.visualViewport?.height ?? window.innerHeight;
+      const maxX = Math.max(margin, vw - btnW - margin);
+      const maxY = Math.max(margin, vh - btnH - margin);
+      const randomX = margin + Math.random() * (maxX - margin);
+      const randomY = margin + Math.random() * (maxY - margin);
 
       noBtn.style.position = "fixed";
       noBtn.style.left = `${randomX}px`;
