@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jordan Frisbee Tournament</title>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #e8f4f0;
+      font-family: "Nunito", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background-image:
+        radial-gradient(circle at 15% 85%, #b8ddd4 0%, transparent 40%),
+        radial-gradient(circle at 85% 15%, #f0c9a0 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, #f5faf8 0%, transparent 60%);
+    }
+
+    .decor-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .decor-bg::before,
+    .decor-bg::after {
+      position: absolute;
+      font-size: 1.5rem;
+      opacity: 0.12;
+      animation: floatDecor 12s linear infinite;
+      white-space: nowrap;
+      top: 100%;
+    }
+
+    .decor-bg::before {
+      content: "🥏 🏆 🥏 🏆 🥏";
+      left: 10%;
+    }
+
+    .decor-bg::after {
+      content: "🏆 🥏 🏆 🥏 🏆";
+      left: 60%;
+      animation-delay: 6s;
+    }
+
+    @keyframes floatDecor {
+      from { transform: translateY(0); opacity: 0.12; }
+      to { transform: translateY(-110vh); opacity: 0; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 520px;
+    }
+
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      color: #1e6b54;
+      font-weight: 900;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 0 rgba(30, 107, 84, 0.15);
+      animation: wiggle 2s ease-in-out infinite;
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-1deg); }
+      50% { transform: rotate(1deg); }
+    }
+
+    .gif-container {
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    #cat-gif {
+      width: 200px;
+      height: 200px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.12));
+      transition: opacity 0.3s ease;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    #yes-btn {
+      background: linear-gradient(135deg, #2d8a6e, #1e6b54);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.6rem;
+      font-weight: 900;
+      font-family: inherit;
+      padding: 18px 45px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, font-size 0.2s, padding 0.2s;
+      box-shadow: 0 6px 20px rgba(30, 107, 84, 0.4);
+      letter-spacing: 1px;
+    }
+
+    #yes-btn:hover {
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 0 10px 28px rgba(30, 107, 84, 0.5);
+    }
+
+    #yes-btn:active {
+      transform: scale(0.98);
+    }
+
+    #no-btn {
+      background: linear-gradient(135deg, #e67e22, #d35400);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: inherit;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: background 0.2s, left 0.25s ease, top 0.25s ease, font-size 0.2s;
+      box-shadow: 0 4px 14px rgba(211, 84, 0, 0.35);
+    }
+
+    #no-btn:hover {
+      background: linear-gradient(135deg, #d35400, #ba4a00);
+    }
+
+    #tease-toast {
+      margin-top: 14px;
+      font-size: 1rem;
+      color: #c45c26;
+      font-weight: 700;
+      font-style: italic;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      min-height: 1.5rem;
+      padding: 0 0.5rem;
+      line-height: 1.4;
+    }
+
+    #tease-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #music-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.85);
+      border: none;
+      border-radius: 50%;
+      width: 52px;
+      height: 52px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s;
+      z-index: 100;
+    }
+
+    #music-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    /* Final step — same page */
+    .celebration .yes-title {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      color: #1e6b54;
+      animation: bounceTitle 0.6s ease infinite alternate;
+    }
+
+    @keyframes bounceTitle {
+      from { transform: translateY(0) rotate(-1deg); }
+      to { transform: translateY(-12px) rotate(1deg); }
+    }
+
+    .yes-message {
+      font-size: 1.35rem;
+      color: #c45c26;
+      font-weight: 700;
+      margin-top: 24px;
+      animation: fadeIn 1s ease 0.5s both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .celebration #cat-gif {
+      width: 260px;
+      height: 260px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="decor-bg"></div>
+
+  <div class="container" id="main-view">
+    <h1 id="headline">Will you come to the Jordan Hat tournament? 🥏</h1>
+
+    <div class="gif-container">
+      <img
+        id="cat-gif"
+        src="https://media.tenor.com/EBV7OT7ACfwAAAAj/u-u-qua-qua-u-quaa.gif"
+        alt="cute character"
+      />
+    </div>
+
+    <div class="buttons" id="buttons">
+      <button type="button" id="yes-btn">Yes</button>
+      <button type="button" id="no-btn">No</button>
+    </div>
+    <div id="tease-toast"></div>
+  </div>
+
+  <div class="container celebration hidden" id="celebration-view">
+    <h1 class="yes-title">Knew you would say yes! 🎉</h1>
+    <div class="gif-container">
+      <img
+        id="celebration-gif"
+        src="https://media.tenor.com/eNHbizSfVb0AAAAj/lovemode-cute.gif"
+        alt="celebrating"
+      />
+    </div>
+    <p class="yes-message">See you at the Jordan frisbee tournament! 🥏🏆</p>
+  </div>
+
+  <button type="button" id="music-toggle" title="Toggle sound">🔊</button>
+
+  <script>
+    const gifStages = [
+      "https://media.tenor.com/EBV7OT7ACfwAAAAj/u-u-qua-qua-u-quaa.gif",
+      "https://media1.tenor.com/m/uDugCXK4vI4AAAAd/chiikawa-hachiware.gif",
+      "https://media.tenor.com/f_rkpJbH1s8AAAAj/somsom1012.gif",
+      "https://media.tenor.com/OGY9zdREsVAAAAAj/somsom1012.gif",
+      "https://media1.tenor.com/m/WGfra-Y_Ke0AAAAd/chiikawa-sad.gif",
+      "https://media.tenor.com/CivArbX7NzQAAAAj/somsom1012.gif",
+      "https://media.tenor.com/5_tv1HquZlcAAAAj/chiikawa.gif",
+      "https://media1.tenor.com/m/uDugCXK4vI4AAAAC/chiikawa-hachiware.gif",
+    ];
+
+    const noMessages = [
+      "No",
+      "Are you positive? 🤔",
+      "I'm waiting for you to say yes...",
+      "If you say no, you'll miss the whole tournament...",
+      "Everyone else is already coming... 😢",
+      "Please??? 🥏",
+      "Don't do this to me...",
+      "Last chance before the frisbees get claimed! 😭",
+      "You can't catch me anyway 😜",
+    ];
+
+    const yesTeasePokes = [
+      "try saying no first... I bet you want to know what happens 😏",
+      "go on, hit no... just once 👀",
+      "you're missing out on the frisbee tournament 😈",
+      "click no, I dare you 😏",
+    ];
+
+    let yesTeasedCount = 0;
+    let noClickCount = 0;
+    let runawayEnabled = false;
+    let soundOn = true;
+
+    const catGif = document.getElementById("cat-gif");
+    const yesBtn = document.getElementById("yes-btn");
+    const noBtn = document.getElementById("no-btn");
+    const teaseToast = document.getElementById("tease-toast");
+    const mainView = document.getElementById("main-view");
+    const celebrationView = document.getElementById("celebration-view");
+    const musicToggle = document.getElementById("music-toggle");
+
+    const RUNAWAY_AFTER_CLICKS = 5;
+
+    yesBtn.addEventListener("click", handleYesClick);
+    noBtn.addEventListener("click", handleNoClick);
+
+    musicToggle.addEventListener("click", () => {
+      soundOn = !soundOn;
+      musicToggle.textContent = soundOn ? "🔊" : "🔇";
+    });
+
+    function handleYesClick() {
+      if (!runawayEnabled) {
+        const msg = yesTeasePokes[Math.min(yesTeasedCount, yesTeasePokes.length - 1)];
+        yesTeasedCount++;
+        showTeaseMessage(msg);
+        return;
+      }
+      showCelebration();
+    }
+
+    function showTeaseMessage(msg) {
+      teaseToast.textContent = msg;
+      teaseToast.classList.add("show");
+      clearTimeout(teaseToast._timer);
+      teaseToast._timer = setTimeout(() => teaseToast.classList.remove("show"), 2500);
+    }
+
+    function handleNoClick() {
+      noClickCount++;
+
+      const msgIndex = Math.min(noClickCount, noMessages.length - 1);
+      noBtn.textContent = noMessages[msgIndex];
+
+      const currentSize = parseFloat(window.getComputedStyle(yesBtn).fontSize);
+      yesBtn.style.fontSize = `${currentSize * 1.35}px`;
+      const padY = Math.min(18 + noClickCount * 5, 60);
+      const padX = Math.min(45 + noClickCount * 10, 120);
+      yesBtn.style.padding = `${padY}px ${padX}px`;
+
+      if (noClickCount >= 2) {
+        const noSize = parseFloat(window.getComputedStyle(noBtn).fontSize);
+        noBtn.style.fontSize = `${Math.max(noSize * 0.85, 10)}px`;
+      }
+
+      const gifIndex = Math.min(noClickCount, gifStages.length - 1);
+      swapGif(gifStages[gifIndex]);
+
+      if (noClickCount >= RUNAWAY_AFTER_CLICKS && !runawayEnabled) {
+        enableRunaway();
+        runawayEnabled = true;
+        showTeaseMessage("okay okay... now you can press yes 🥏");
+      }
+    }
+
+    function swapGif(src) {
+      catGif.style.opacity = "0";
+      setTimeout(() => {
+        catGif.src = src;
+        catGif.style.opacity = "1";
+      }, 200);
+    }
+
+    function enableRunaway() {
+      noBtn.addEventListener("mouseover", runAway);
+      noBtn.addEventListener("touchstart", runAway, { passive: true });
+    }
+
+    function runAway() {
+      const margin = 20;
+      const btnW = noBtn.offsetWidth;
+      const btnH = noBtn.offsetHeight;
+      const maxX = window.innerWidth - btnW - margin;
+      const maxY = window.innerHeight - btnH - margin;
+      const randomX = Math.random() * maxX + margin / 2;
+      const randomY = Math.random() * maxY + margin / 2;
+
+      noBtn.style.position = "fixed";
+      noBtn.style.left = `${randomX}px`;
+      noBtn.style.top = `${randomY}px`;
+      noBtn.style.zIndex = "50";
+    }
+
+    function showCelebration() {
+      mainView.classList.add("hidden");
+      celebrationView.classList.remove("hidden");
+
+      const colors = ["#1e6b54", "#2d8a6e", "#c45c26", "#d4a017", "#f0c9a0"];
+      const defaults = {
+        spread: 360,
+        ticks: 100,
+        gravity: 0,
+        decay: 0.94,
+        startVelocity: 20,
+        colors,
+      };
+
+      confetti({ ...defaults, particleCount: 50, scalar: 2 });
+      confetti({ ...defaults, particleCount: 25, scalar: 3 });
+      confetti({ ...defaults, particleCount: 10, scalar: 4 });
+    }
+  </script>
+</body>
+</html>
